@@ -575,15 +575,19 @@ static void showExc(VALUE exc, const BacktraceData &btData)
 
 static void mriBindingExecute()
 {
-	/* Normally only a ruby executable would do a sysinit,
+	/* Normally only a ruby executable would do an init,
 	 * but not doing it will lead to crashes due to closed
 	 * stdio streams on some platforms (eg. Windows) */
-	int argc = 0;
-	char **argv = 0;
-	ruby_sysinit(&argc, &argv);
+	ruby_init();
 
-	ruby_setup();
-	rb_enc_set_default_external(rb_enc_from_encoding(rb_utf8_encoding()));
+	// HACK: External encodings are loaded via Init_enc, but the only exported function that calls that is ruby_options, which will attempt to read from stdin if a script is not specified on the command line.  Work around this by specifying an empty script.
+	char mkxp[] = "mkxp";
+	char dash_e[] = "-e";
+	char empty[] = "";
+	char external_encoding[] = "--external-encoding=UTF-8";
+	char *argv[] = {mkxp, dash_e, empty, external_encoding, nullptr};
+	int argc = sizeof(argv)/sizeof(*argv) - 1;
+	ruby_options(argc, argv);
 
 	Config &conf = shState->rtData().config;
 
