@@ -194,7 +194,11 @@ struct SoundOpenHandler : FileSystem::OpenHandler
 
 	bool tryRead(SDL_RWops &ops, const char *ext)
 	{
-		Sound_Sample *sample = Sound_NewSample(&ops, ext, 0, STREAM_BUF_SIZE);
+		Sound_AudioInfo desired{};
+		desired.format = AUDIO_S16;
+		desired.channels = 2;
+
+		Sound_Sample *sample = Sound_NewSample(&ops, ext, &desired, STREAM_BUF_SIZE);
 
 		if (!sample)
 		{
@@ -205,16 +209,16 @@ struct SoundOpenHandler : FileSystem::OpenHandler
 		/* Do all of the decoding in the handler so we don't have
 		 * to keep the source ops around */
 		uint32_t decBytes = Sound_DecodeAll(sample);
-		uint8_t sampleSize = formatSampleSize(sample->actual.format);
+		uint8_t sampleSize = formatSampleSize(sample->desired.format);
 		uint32_t sampleCount = decBytes / sampleSize;
 
 		buffer = new SoundBuffer;
 		buffer->bytes = sampleSize * sampleCount;
 
-		ALenum alFormat = chooseALFormat(sampleSize, sample->actual.channels);
+		ALenum alFormat = chooseALFormat(sampleSize, sample->desired.channels);
 
 		AL::Buffer::uploadData(buffer->alBuffer, alFormat, sample->buffer,
-							   buffer->bytes, sample->actual.rate);
+							   buffer->bytes, sample->desired.rate);
 
 		Sound_FreeSample(sample);
 

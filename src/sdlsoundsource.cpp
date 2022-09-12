@@ -41,7 +41,11 @@ struct SDLSoundSource : ALDataSource
 	    : srcOps(ops),
 	      looped(looped)
 	{
-		sample = Sound_NewSample(&srcOps, extension, 0, maxBufSize);
+		Sound_AudioInfo desired{};
+		desired.format = AUDIO_S16;
+		desired.channels = 2;
+
+		sample = Sound_NewSample(&srcOps, extension, &desired, maxBufSize);
 
 		if (!sample)
 		{
@@ -49,10 +53,10 @@ struct SDLSoundSource : ALDataSource
 			throw Exception(Exception::SDLError, "SDL_sound: %s", Sound_GetError());
 		}
 
-		sampleSize = formatSampleSize(sample->actual.format);
+		sampleSize = formatSampleSize(sample->desired.format);
 
-		alFormat = chooseALFormat(sampleSize, sample->actual.channels);
-		alFreq = sample->actual.rate;
+		alFormat = chooseALFormat(sampleSize, sample->desired.channels);
+		alFreq = sample->desired.rate;
 	}
 
 	~SDLSoundSource()
@@ -98,7 +102,7 @@ struct SDLSoundSource : ALDataSource
 
 	int sampleRate()
 	{
-		return sample->actual.rate;
+		return sample->desired.rate;
 	}
 
 	void seekToOffset(float seconds)
