@@ -361,7 +361,7 @@ void Font::setSize(int value)
 
 	/* Catch illegal values (according to RMXP) */
 	if (value < 6 || value > 96)
-		throw Exception(Exception::ArgumentError, "%s", "bad value for size");
+		throw Exception(Exception::ArgumentError, "%d: %s", value, "bad value for size");
 
 	p->size = value;
 	p->sdlFont = 0;
