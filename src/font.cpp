@@ -33,6 +33,8 @@
 
 #include <SDL_ttf.h>
 
+#include <src/debugwriter.h>
+
 #define BUNDLED_FONT liberation
 
 #define BUNDLED_FONT_DECL(FONT) \
@@ -116,6 +118,7 @@ void SharedFontState::initFontSetCB(SDL_RWops &ops,
 	if (!font)
 		return;
 
+	// TODO: This only gets the preferred/typographical family, but not the base family
 	std::string family = TTF_FontFaceFamilyName(font);
 	std::string style = TTF_FontFaceStyleName(font);
 
@@ -141,6 +144,7 @@ _TTF_Font *SharedFontState::getFont(std::string family,
 
 	if (req.regular.empty() && req.other.empty())
 	{
+		Debug() << "Could not get font" << family << "(are you missing a fontSub=family>typographic_family substitution?)";
 		/* Doesn't exist; use built-in font */
 		family = "";
 	}
@@ -219,6 +223,23 @@ void pickExistingFontName(const std::vector<std::string> &names,
 		}
 	}
 
+	if (!names.empty())
+	{
+		[&](Debug &&debug) {
+			debug << "Could not pick";
+			if (names.size() == 1)
+			{
+				debug << "font" << names.front();
+			}
+			else
+			{
+				debug << "any of these fonts:" << names.front();
+				for (size_t i=1; i<names.size(); ++i)
+					debug << ',' << names[i];
+			}
+			debug << "(are you missing a fontSub=family>typographic_family substitution?)";
+		}(Debug());
+	}
 	out = "";
 }
 
