@@ -23,6 +23,7 @@
 
 #include "sharedstate.h"
 #include "filesystem.h"
+#include "graphics.h"
 #include "exception.h"
 #include "boost-hash.h"
 #include "util.h"
@@ -175,10 +176,11 @@ _TTF_Font *SharedFontState::getFont(std::string family,
 		shState->fileSystem().openReadRaw(*ops, path, true);
 	}
 
-	// FIXME 0.9 is guesswork at this point
-//	float gamma = (96.0/45.0)*(5.0/14.0)*(size-5);
-//	font = TTF_OpenFontRW(ops, 1, gamma /** .90*/);
-	font = TTF_OpenFontRW(ops, 1, size* 0.90f);
+	// The size multiplier is 72/96 (points per inch/pixels per inch) = 0.75 at 480 pixels high
+	// At lover resolutions, the point size increases by a factor of 480/actual height
+	// So the multiplier at the default height (416) is ~0.865
+	double size_multiplier = 72.0/96.0 * 480.0 / shState->graphics().height();
+	font = TTF_OpenFontRW(ops, 1, size * size_multiplier);
 
 	if (!font)
 		throw Exception(Exception::SDLError, "%s", SDL_GetError());
