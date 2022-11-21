@@ -176,11 +176,25 @@ _TTF_Font *SharedFontState::getFont(std::string family,
 		shState->fileSystem().openReadRaw(*ops, path, true);
 	}
 
-	// The size multiplier is 72/96 (points per inch/pixels per inch) = 0.75 at 480 pixels high
-	// At lover resolutions, the point size increases by a factor of 480/actual height
-	// So the multiplier at the default height (416) is ~0.865
-	double size_multiplier = 72.0/96.0 * 480.0 / shState->graphics().height();
-	font = TTF_OpenFontRW(ops, 1, size * size_multiplier);
+	// RPGMaker passes font sizes directly to Windows.  Windows converts these sizes into pixel sizes via the following algorithm:
+	// 1. If the font has a VDMX table, lookup the point size there and use the total height directly
+	// 2. Otherwise, read the units per EM from the head table
+	// 3. If the OS/2 table has non-zero usWinAscent and usWinDescent values, add those to get the units per pixel
+	// 4. Otherwise, read yAscender and yDescender from the hhea table and subtract them to get the units per pixel
+	// 5. Calculate the pixel size by multiplying the height by the units per EM and dividing by the units per pixel
+	// We can't do this because SDL_ttf does not expose font headers, so as an interim solution cheat by hardcoding the scaling
+	double size_multiplier = [&]{
+		if (family == "VL Gothic"sv)
+			return 1000.0/(1000.0+270.0);
+		else if (family == "Arial"sv)
+			return 2048.0/(1854.0+434.0);
+		else if (family == "Source Han Sans CN"sv)
+			return 1000.0/(1104.0+308.0);
+		Debug() << "No multiplier for font" << family << "with size" << size << "using default multiplier 0.9";
+		return 0.9;
+	}();
+	auto point_size = (int)std::round(size * size_multiplier);
+	font = TTF_OpenFontRW(ops, 1, point_size);
 
 	if (!font)
 		throw Exception(Exception::SDLError, "%s", SDL_GetError());
@@ -322,7 +336,7 @@ struct FontPrivate
 };
 
 std::string FontPrivate::defaultName     = "Arial";
-int         FontPrivate::defaultSize     = 22;
+int         FontPrivate::defaultSize     = 24;
 bool        FontPrivate::defaultBold     = false;
 bool        FontPrivate::defaultItalic   = false;
 bool        FontPrivate::defaultOutline  = false; /* Inited at runtime */
