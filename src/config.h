@@ -33,6 +33,8 @@ struct Config
 	bool debugMode;
 	bool printFPS;
 
+	bool muteAudio;
+
 	bool winResizable;
 	bool fullscreen;
 	bool fixedAspectRatio;

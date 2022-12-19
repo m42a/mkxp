@@ -155,6 +155,7 @@ void Config::read(int argc, char *argv[])
 	PO_DESC(rgssVersion, int, 0) \
 	PO_DESC(debugMode, bool, false) \
 	PO_DESC(printFPS, bool, false) \
+	PO_DESC(muteAudio, bool, false) \
 	PO_DESC(winResizable, bool, false) \
 	PO_DESC(fullscreen, bool, false) \
 	PO_DESC(fixedAspectRatio, bool, true) \

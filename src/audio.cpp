@@ -70,6 +70,8 @@ struct AudioPrivate
 	      se(rtData.config),
 	      syncPoint(rtData.syncPoint)
 	{
+		if (rtData.config.muteAudio)
+			alListenerf(AL_GAIN, 0);
 		meWatch.state = MeNotPlaying;
 		meWatch.thread = createSDLThread
 			<AudioPrivate, &AudioPrivate::meWatchFun>(this, "audio_mewatch");
