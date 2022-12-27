@@ -235,6 +235,7 @@ void Config::read(int argc, char *argv[])
 	catch (po::error &error)
 	{
 		Debug() << "Command line:" << error.what();
+		std::exit(1);
 	}
 
 	/* Parse configuration file */
@@ -250,6 +251,7 @@ void Config::read(int argc, char *argv[])
 		catch (po::error &error)
 		{
 			Debug() << CONF_FILE":" << error.what();
+			std::exit(1);
 		}
 	}
 
