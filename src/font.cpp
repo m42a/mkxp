@@ -36,6 +36,8 @@
 
 #include <src/debugwriter.h>
 
+using namespace std::literals;
+
 #define BUNDLED_FONT liberation
 
 #define BUNDLED_FONT_DECL(FONT) \
@@ -190,6 +192,12 @@ _TTF_Font *SharedFontState::getFont(std::string family,
 			return 2048.0/(1854.0+434.0);
 		else if (family == "Source Han Sans CN"sv)
 			return 1000.0/(1104.0+308.0);
+		else if (family == "Meiryo"sv)
+			return 2048.0/(2171.0+901.0);
+		else if (family == "UmePlus Gothic"sv)
+			return 4096.0/(3520.0+888.0);
+		else if (family == "Arial Black"sv)
+			return 2048.0/(2254.0+634.0);
 		Debug() << "No multiplier for font" << family << "with size" << size << "using default multiplier 0.9";
 		return 0.9;
 	}();
