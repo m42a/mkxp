@@ -3,6 +3,7 @@ Project(mkxp)
 
 ## Setup options ##
 
+set(CMAKE_CXX_STANDARD 20)
 option(SHARED_FLUID "Dynamically link fluidsynth at build time" OFF)
 option(WORKDIR_CURRENT "Keep current directory on startup" OFF)
 option(FORCE32 "Force 32bit compile on 64bit OS" OFF)

@@ -19,6 +19,8 @@
 ** along with mkxp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <string>
+
 #include "bitmap.h"
 
 #include <SDL.h>
@@ -43,6 +45,8 @@
 #include "filesystem.h"
 #include "font.h"
 #include "eventthread.h"
+
+using namespace std::literals;
 
 #define GUARD_MEGA \
 	{ \
@@ -897,6 +901,47 @@ static std::string fixupString(const char *str)
 	return s;
 }
 
+static bool is_all_space(std::string_view sv)
+{
+	auto spaces = {
+		// normal space
+		" "sv,
+		// non-breaking space
+		"\u00a0"sv,
+		// en space
+		"\u2002"sv,
+		// em space
+		"\u2003"sv,
+		// figure space
+		"\u2007"sv,
+		// punctuation space
+		"\u2008"sv,
+		// thin space
+		"\u2009"sv,
+		// zero-width space
+		"\u200b"sv,
+		// zero-width non-joiner
+		"\u200c"sv,
+		// zero-width joiner
+		"\u200d"sv,
+		// narrow non-breaking space
+		"\u202f"sv,
+		// word joiner
+		"\u2060"sv,
+		// ideographic space
+		"\u3000"sv,
+	};
+
+	while (!sv.empty())
+	{
+		auto i = std::find_if(begin(spaces), end(spaces), [&](std::string_view space) { return sv.starts_with(space); });
+		if (i == end(spaces))
+			return false;
+		sv.remove_prefix(i->size());
+	}
+	return true;
+}
+
 static void applyShadow(SDL_Surface *&in, const SDL_PixelFormat &fm, const SDL_Color &c)
 {
 	SDL_Surface *out = SDL_CreateRGBSurface
@@ -993,10 +1038,7 @@ void Bitmap::drawText(const IntRect &rect, const char *str, int align)
 	std::string fixed = fixupString(str);
 	str = fixed.c_str();
 
-	if (*str == '\0')
-		return;
-
-	if (str[0] == ' ' && str[1] == '\0')
+	if (is_all_space(fixed))
 		return;
 
 	TTF_Font *font = p->font->getSdlFont();
