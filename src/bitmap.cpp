@@ -104,7 +104,7 @@ struct BitmapPrivate
 	 * with full opacity, we can disregard any old contents
 	 * in the texture and blit to it directly, saving
 	 * ourselves the expensive blending calculation */
-	pixman_region16_t tainted;
+	pixman_region32_t tainted;
 
 	BitmapPrivate(Bitmap *self)
 	    : self(self),
@@ -114,13 +114,13 @@ struct BitmapPrivate
 		format = SDL_AllocFormat(SDL_PIXELFORMAT_ABGR8888);
 
 		font = &shState->defaultFont();
-		pixman_region_init(&tainted);
+		pixman_region32_init(&tainted);
 	}
 
 	~BitmapPrivate()
 	{
 		SDL_FreeFormat(format);
-		pixman_region_fini(&tainted);
+		pixman_region32_fini(&tainted);
 	}
 
 	void allocSurface()
@@ -132,14 +132,14 @@ struct BitmapPrivate
 
 	void clearTaintedArea()
 	{
-		pixman_region_fini(&tainted);
-		pixman_region_init(&tainted);
+		pixman_region32_fini(&tainted);
+		pixman_region32_init(&tainted);
 	}
 
 	void addTaintedArea(const IntRect &rect)
 	{	
 		IntRect norm = normalizedRect(rect);
-		pixman_region_union_rect
+		pixman_region32_union_rect
 		        (&tainted, &tainted, norm.x, norm.y, norm.w, norm.h);
 	}
 
@@ -148,24 +148,24 @@ struct BitmapPrivate
 		if (!touchesTaintedArea(rect))
 			return;
 
-		pixman_region16_t m_reg;
-		pixman_region_init_rect(&m_reg, rect.x, rect.y, rect.w, rect.h);
+		pixman_region32_t m_reg;
+		pixman_region32_init_rect(&m_reg, rect.x, rect.y, rect.w, rect.h);
 
-		pixman_region_subtract(&tainted, &m_reg, &tainted);
+		pixman_region32_subtract(&tainted, &m_reg, &tainted);
 
-		pixman_region_fini(&m_reg);
+		pixman_region32_fini(&m_reg);
 	}
 
 	bool touchesTaintedArea(const IntRect &rect)
 	{
-		pixman_box16_t box;
+		pixman_box32_t box;
 		box.x1 = rect.x;
 		box.y1 = rect.y;
 		box.x2 = rect.x + rect.w;
 		box.y2 = rect.y + rect.h;
 
 		pixman_region_overlap_t result =
-		        pixman_region_contains_rectangle(&tainted, &box);
+		        pixman_region32_contains_rectangle(&tainted, &box);
 
 		return result != PIXMAN_REGION_OUT;
 	}
