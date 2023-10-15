@@ -678,7 +678,7 @@ void FileSystem::openRead(OpenHandler &handler, const char *filename)
 	}
 
 	if (data.physfsError)
-		throw Exception(Exception::PHYSFSError, "PhysFS: %s", data.physfsError);
+		throw Exception(Exception::PHYSFSError, "PhysFS: %s %s", filename, data.physfsError);
 
 	if (data.matchCount == 0)
 		throw Exception(Exception::NoFileError, "%s", filename);
