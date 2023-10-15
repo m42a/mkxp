@@ -816,6 +816,9 @@ void Bitmap::setPixel(int x, int y, const Color &color)
 
 	GUARD_MEGA;
 
+	if (x < 0 || y < 0 || x >= width() || y >= height())
+		return;
+
 	uint8_t pixel[] =
 	{
 		(uint8_t) clamp<double>(color.red,   0, 255),
