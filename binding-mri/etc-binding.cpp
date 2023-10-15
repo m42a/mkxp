@@ -70,7 +70,7 @@ ATTR_INT_RW(Rect, Height)
 		Klass *other; \
 		rb_get_args(argc, argv, "o", &otherObj RB_ARG_END); \
 		if (rgssVer >= 3) \
-			if (!rb_typeddata_is_kind_of(otherObj, &Klass##Type)) \
+			if (!rb_typeddata_is_kind_of(otherObj, &Klass##Type.data_alloc_info)) \
 				return Qfalse; \
 		other = getPrivateDataCheck<Klass>(otherObj, Klass##Type); \
 		return rb_bool_new(*p == *other); \

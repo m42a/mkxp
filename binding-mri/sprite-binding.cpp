@@ -39,9 +39,9 @@ RB_METHOD(spriteInitialize)
 	/* Wrap property objects */
 	s->initDynAttribs();
 
-	wrapProperty(self, &s->getSrcRect(), "src_rect", RectType);
-	wrapProperty(self, &s->getColor(), "color", ColorType);
-	wrapProperty(self, &s->getTone(), "tone", ToneType);
+	RectType.wrap_property(self, "src_rect", &s->getSrcRect());
+	ColorType.wrap_property(self, "color", &s->getColor());
+	ToneType.wrap_property(self, "tone", &s->getTone());
 
 	return self;
 }

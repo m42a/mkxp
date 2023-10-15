@@ -156,7 +156,7 @@ RB_METHOD(graphicsSnapToBitmap)
 	Bitmap *result = 0;
 	GUARD_EXC( result = shState->graphics().snapToBitmap(); );
 
-	VALUE obj = wrapObject(result, BitmapType);
+	VALUE obj = BitmapType.wrap_object(result);
 	bitmapInitProps(result, obj);
 
 	return obj;

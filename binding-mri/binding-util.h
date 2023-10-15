@@ -23,6 +23,7 @@
 #define BINDING_UTIL_H
 
 #include <ruby.h>
+#include <ruby/version.h>
 
 #include "exception.h"
 
@@ -62,36 +63,11 @@ struct Exception;
 void
 raiseRbExc(const Exception &exc);
 
-#define DECL_TYPE(Klass) \
-	extern rb_data_type_t Klass##Type
-
-/* 2.1 has added a new field (flags) to rb_data_type_t */
-#include <ruby/version.h>
-#if RUBY_API_VERSION_MAJOR >= 2 && RUBY_API_VERSION_MINOR >= 1
-/* TODO: can mkxp use RUBY_TYPED_FREE_IMMEDIATELY here? */
-#define DEF_TYPE_FLAGS 0
-#else
-#define DEF_TYPE_FLAGS
-#endif
-
-#define DEF_TYPE_CUSTOMNAME_AND_FREE(Klass, Name, Free) \
-	rb_data_type_t Klass##Type = { \
-		Name, { 0, Free, 0, { 0, 0 } }, 0, 0, DEF_TYPE_FLAGS \
-	}
-
-#define DEF_TYPE_CUSTOMFREE(Klass, Free) \
-	DEF_TYPE_CUSTOMNAME_AND_FREE(Klass, #Klass, Free)
-
-#define DEF_TYPE_CUSTOMNAME(Klass, Name) \
-	DEF_TYPE_CUSTOMNAME_AND_FREE(Klass, Name, freeInstance<Klass>)
-
-#define DEF_TYPE(Klass) DEF_TYPE_CUSTOMNAME(Klass, #Klass)
-
-template<rb_data_type_t *rbType>
+template<const rb_data_type_t *rbType>
 static VALUE classAllocate(VALUE klass)
 {
 /* 2.3 has changed the name of this function */
-#if RUBY_API_VERSION_MAJOR >= 2 && RUBY_API_VERSION_MINOR >= 3
+#if RUBY_API_VERSION_MAJOR > 2 || (RUBY_API_VERSION_MAJOR == 2 && RUBY_API_VERSION_MINOR >= 3)
 	return rb_data_typed_object_wrap(klass, 0, rbType);
 #else
 	return rb_data_typed_object_alloc(klass, 0, rbType);
@@ -104,11 +80,23 @@ static void freeInstance(void *inst)
 	delete static_cast<C*>(inst);
 }
 
-void
-raiseDisposedAccess(VALUE self);
+template<class C>
+static size_t sizeInstance(const void *)
+{
+	return sizeof(C);
+}
 
 template<class C>
-inline C *
+requires requires(const C c) { {c.ruby_size()} -> std::convertible_to<size_t>; }
+static size_t sizeInstance(const void *ptr)
+{
+	if (!ptr)
+		return 0;
+	return static_cast<const C *>(ptr)->ruby_size();
+}
+
+template<class C>
+static inline C *
 getPrivateData(VALUE self)
 {
 	C *c = static_cast<C*>(RTYPEDDATA_DATA(self));
@@ -153,6 +141,88 @@ wrapProperty(VALUE self, void *prop, const char *iv,
 
 	return propObj;
 }
+
+// Helper for wrapping structs that do not hold any references to ruby objects
+struct wrapping_data
+{
+	rb_data_type_t data_alloc_info;
+	VALUE object_klass;
+
+	template <class Underlying>
+	static constexpr wrapping_data make(const char *name) noexcept
+	{
+		wrapping_data ret{};
+		ret.data_alloc_info.wrap_struct_name = name;
+		ret.data_alloc_info.function.dfree = &freeInstance<Underlying>;
+		ret.data_alloc_info.function.dsize = &sizeInstance<Underlying>;
+#if RUBY_API_VERSION_MAJOR > 2 || (RUBY_API_VERSION_MAJOR == 2 && RUBY_API_VERSION_MINOR >= 1)
+		ret.data_alloc_info.flags = RUBY_TYPED_FREE_IMMEDIATELY;
+#endif
+		return ret;
+	}
+
+	VALUE wrap_object(void *data)
+	{
+		auto klass = object_klass;
+		if (!klass)
+		{
+			klass = rb_const_get(rb_cObject, rb_intern(data_alloc_info.wrap_struct_name));
+			object_klass = klass;
+		}
+
+		auto obj = rb_obj_alloc(klass);
+		setPrivateData(obj, data);
+		return obj;
+	}
+
+	VALUE wrap_property(VALUE object, const char *iv, void *prop)
+	{
+		auto prop_obj = wrap_object(prop);
+		rb_iv_set(object, iv, prop_obj);
+		return prop_obj;
+	}
+};
+
+template<const wrapping_data *rbType>
+static VALUE classAllocate(VALUE klass)
+{
+	return classAllocate<&rbType->data_alloc_info>(klass);
+}
+
+template<class C>
+static inline C *
+getPrivateDataCheck(VALUE self, const wrapping_data &data)
+{
+	return getPrivateDataCheck<C>(self, data.data_alloc_info);
+}
+
+#define DECL_TYPE(Klass) \
+	extern wrapping_data Klass##Type
+
+/* 2.1 has added a new field (flags) to rb_data_type_t */
+#if RUBY_API_VERSION_MAJOR > 2 || (RUBY_API_VERSION_MAJOR == 2 && RUBY_API_VERSION_MINOR >= 1)
+/* TODO: can mkxp use RUBY_TYPED_FREE_IMMEDIATELY here? */
+#define DEF_TYPE_FLAGS 0
+#else
+#define DEF_TYPE_FLAGS
+#endif
+
+#define DEF_TYPE_CUSTOMNAME_AND_FREE(Klass, Name, Free) \
+	rb_data_type_t Klass##Type = { \
+		Name, { 0, Free, 0, { 0, 0 } }, 0, 0, DEF_TYPE_FLAGS \
+	}
+
+#define DEF_TYPE_CUSTOMFREE(Klass, Free) \
+	DEF_TYPE_CUSTOMNAME_AND_FREE(Klass, #Klass, Free)
+
+#define DEF_TYPE_CUSTOMNAME(Klass, Name) \
+	DEF_TYPE_CUSTOMNAME_AND_FREE(Klass, Name, freeInstance<Klass>)
+
+//#define DEF_TYPE(Klass) DEF_TYPE_CUSTOMNAME(Klass, #Klass)
+#define DEF_TYPE(Klass) constinit wrapping_data Klass##Type = wrapping_data::make<Klass>(#Klass)
+
+void
+raiseDisposedAccess(VALUE self);
 
 /* Implemented: oSszfibn| */
 int

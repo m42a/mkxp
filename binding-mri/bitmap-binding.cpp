@@ -108,7 +108,7 @@ RB_METHOD(bitmapRect)
 
 	Rect *r = new Rect(rect);
 
-	return wrapObject(r, RectType);
+	return RectType.wrap_object(r);
 }
 
 RB_METHOD(bitmapBlt)
@@ -213,7 +213,7 @@ RB_METHOD(bitmapGetPixel)
 
 	Color *color = new Color(value);
 
-	return wrapObject(color, ColorType);
+	return ColorType.wrap_object(color);
 }
 
 RB_METHOD(bitmapSetPixel)
@@ -320,7 +320,7 @@ RB_METHOD(bitmapTextSize)
 
 	Rect *rect = new Rect(value);
 
-	return wrapObject(rect, RectType);
+	return RectType.wrap_object(rect);
 }
 
 DEF_PROP_OBJ_VAL(Bitmap, Font, Font, "font")

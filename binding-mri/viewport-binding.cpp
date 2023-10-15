@@ -64,9 +64,9 @@ RB_METHOD(viewportInitialize)
 	/* Wrap property objects */
 	v->initDynAttribs();
 
-	wrapProperty(self, &v->getRect(),  "rect",  RectType);
-	wrapProperty(self, &v->getColor(), "color", ColorType);
-	wrapProperty(self, &v->getTone(),  "tone",  ToneType);
+	RectType.wrap_property(self,  "rect",  &v->getRect());
+	ColorType.wrap_property(self, "color", &v->getColor());
+	ToneType.wrap_property(self,  "tone",  &v->getTone());
 
 	/* 'elements' holds all SceneElements that become children
 	 * of this viewport, so we can dispose them when the viewport
