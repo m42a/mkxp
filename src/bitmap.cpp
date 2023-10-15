@@ -907,6 +907,8 @@ static std::string fixupString(const char *str)
 static bool is_all_space(std::string_view sv)
 {
 	auto spaces = {
+		// tab
+		"\t"sv,
 		// normal space
 		" "sv,
 		// non-breaking space
