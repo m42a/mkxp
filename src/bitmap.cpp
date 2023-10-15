@@ -301,7 +301,7 @@ Bitmap::Bitmap(const char *filename)
 Bitmap::Bitmap(int width, int height)
 {
 	if (width <= 0 || height <= 0)
-		throw Exception(Exception::RGSSError, "failed to create bitmap");
+		throw Exception(Exception::RGSSError, "Invalid bitmap dimensions (w=%d h=%d)", width, height);
 
 	TEXFBO tex = shState->texPool().request(width, height);
 
