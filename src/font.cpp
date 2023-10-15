@@ -259,6 +259,10 @@ void pickExistingFontName(const std::vector<std::string> &names,
 			out = names[i];
 			return;
 		}
+		else
+		{
+			Debug() << "Could not find font" << names[i];
+		}
 	}
 
 	if (!names.empty())
