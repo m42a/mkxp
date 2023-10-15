@@ -198,6 +198,20 @@ _TTF_Font *SharedFontState::getFont(std::string family,
 			return 4096.0/(3520.0+888.0);
 		else if (family == "Arial Black"sv)
 			return 2048.0/(2254.0+634.0);
+		else if (family == "Calibri"sv)
+			return 2048.0/(1950.0+550.0);
+		else if (family == "MS PGothic"sv)
+			return 256.0/(220.0+36.0);
+		else if (family == "Verdana"sv)
+			return 2048.0/(2059.0+430.0);
+		else if (family == "Myriad Pro"sv)
+			return 1000.0/(952.0+250.0);
+		else if (family == "Lancelot"sv)
+			return 1024.0/(797.0+334.0);
+		else if (family == "HGSoeiKakupoptai"sv)
+			return 256.0/(220.0+36.0);
+		else if (family == "Amaranth"sv)
+			return 1000.0/(976.0+258.0);
 		Debug() << "No multiplier for font" << family << "with size" << size << "using default multiplier 0.9";
 		return 0.9;
 	}();
